@@ -1,16 +1,19 @@
-# SD42 Work Instruction & Comprehensive Guide — DOCX Style Template
-### For use with GitHub Copilot, Microsoft 365 Copilot, or any AI code assistant
+# SD42 Work Instruction — DOCX Style Template (v2.0)
+### Hybrid Checklist + Appendix Format for use with GitHub Copilot, Microsoft 365 Copilot, or any AI code assistant
 
 ---
 
 ## Purpose
 
-This document defines the exact visual style, colour palette, layout rules, and `docx` JavaScript code patterns used to generate **School District No. 42 (Maple Ridge & Pitt Meadows) Work Instructions (WI-) and Comprehensive Guides (CG-)** as `.docx` files. Feed this file to an AI assistant and ask it to create a new work instruction or comprehensive guide. The AI should follow every specification here exactly.
+This document defines the exact visual style, colour palette, layout rules, and `docx` JavaScript code patterns used to generate **School District No. 42 (Maple Ridge & Pitt Meadows) Work Instructions (WI-) and How-To Guides (HT-)** as `.docx` files with a **hybrid structure**: a quick checklist procedure that references detailed step-by-step appendices.
 
-### Document Types
+### Document Structure Overview
 
-- **Work Instruction (WI-)**: Concise, procedural documents for experienced technicians. Focus: efficiency and quick reference.
-- **Comprehensive Guide (CG-)**: Detailed, contextual documents for field technicians learning complex procedures. Focus: understanding, troubleshooting, and cross-functional awareness.
+**Hybrid Format:**
+- **Main Procedure Section**: Quick checklist (2-column table) with step name + appendix reference
+- **Appendices**: Detailed click-by-click instructions organized by procedure step
+- **Title Page**: Separate cover sheet directing readers to start at the Procedure section
+- **Backward Compatible**: All existing WI/HT styling, colours, and ISO 9001:2015 compliance maintained
 
 ---
 
@@ -28,7 +31,7 @@ This document defines the exact visual style, colour palette, layout rules, and 
 const {
   Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, ImageRun,
   Header, Footer, AlignmentType, HeadingLevel, BorderStyle, WidthType, ShadingType,
-  VerticalAlign, PageNumber, PageBreak, LevelFormat, TabStopType, TabStopPosition
+  VerticalAlign, PageNumber, PageBreak, LevelFormat, TabStopType, TabStopPosition, HyperlinkType
 } = require('docx');
 const fs = require('fs');
 ```
@@ -69,6 +72,7 @@ properties: {
 | `WARN_YLW_FILL` | `FFF2CC` | NOTE callout background |
 | `WARN_YLW_TEXT` | `5A3E00` | NOTE callout text |
 | `WHITE` | `FFFFFF` | Table header text, general white |
+| `HYPERLINK_BLUE` | `0563C1` | Hyperlink text colour |
 
 ---
 
@@ -88,6 +92,7 @@ properties: {
 | Footer text | Arial | 16 (8pt) | Normal | `595959` |
 | Callout title line | Arial | 22 (11pt) | Bold | varies by type |
 | Callout body lines | Arial | 22 (11pt) | Normal | varies by type |
+| Hyperlink text | Arial | varies | Normal | `0563C1` (underlined) |
 
 ---
 
@@ -145,7 +150,7 @@ numbering: {
       }]
     },
     {
-      reference: "steps-detailed",
+      reference: "appendix-steps",
       levels: [
         {
           level: 0, format: LevelFormat.DECIMAL, text: "%1.", alignment: AlignmentType.LEFT,
@@ -156,13 +161,6 @@ numbering: {
           style: { paragraph: { indent: { left: 1080, hanging: 270 } } }
         }
       ]
-    },
-    {
-      reference: "steps-b",
-      levels: [{
-        level: 0, format: LevelFormat.DECIMAL, text: "%1.", alignment: AlignmentType.LEFT,
-        style: { paragraph: { indent: { left: 540, hanging: 270 } } }
-      }]
     }
   ]
 }
@@ -170,9 +168,90 @@ numbering: {
 
 ---
 
+## Title Page (NEW)
+
+A separate cover sheet before the header. Styled centered with document metadata and a instruction line.
+
+```javascript
+function titlePage(docNo, title, author, date, scope) {
+  return [
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 2400, after: 240 },
+      children: [new TextRun({ text: title, font: "Arial", size: 32, bold: true, color: "1F4E79" })]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 0, after: 480 },
+      children: [new TextRun({ text: "School District No. 42 — Information Technology Services", font: "Arial", size: 18, color: "595959" })]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 400, after: 60 },
+      children: [new TextRun({ text: "Document Number:", font: "Arial", size: 22, bold: true, color: "1F4E79" })]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 0, after: 160 },
+      children: [new TextRun({ text: docNo, font: "Arial", size: 22, color: "000000" })]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 200, after: 60 },
+      children: [new TextRun({ text: "Author:", font: "Arial", size: 22, bold: true, color: "1F4E79" })]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 0, after: 160 },
+      children: [new TextRun({ text: author, font: "Arial", size: 22, color: "000000" })]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 200, after: 60 },
+      children: [new TextRun({ text: "Date:", font: "Arial", size: 22, bold: true, color: "1F4E79" })]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 0, after: 160 },
+      children: [new TextRun({ text: date, font: "Arial", size: 22, color: "000000" })]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 400, after: 240 },
+      border: { top: { style: BorderStyle.SINGLE, size: 4, color: "1F4E79", space: 2 } },
+      children: [new TextRun({ text: "Scope", font: "Arial", size: 22, bold: true, color: "1F4E79" })]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.LEFT,
+      spacing: { before: 0, after: 480 },
+      indent: { left: 360, right: 360 },
+      children: [new TextRun({ text: scope, font: "Arial", size: 22, color: "000000" })]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 600, after: 0 },
+      children: [new TextRun({ text: "TO BEGIN:", font: "Arial", size: 22, bold: true, color: "C00000" })]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 120, after: 0 },
+      children: [new TextRun({ text: "See the Procedure section (Section 6) for quick steps.", font: "Arial", size: 22, color: "000000" })]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 60, after: 0 },
+      children: [new TextRun({ text: "Detailed instructions are in the Appendices.", font: "Arial", size: 22, color: "000000" })]
+    }),
+    new PageBreak()
+  ];
+}
+```
+
+---
+
 ## Header
 
-The header is a **2-column borderless table** (no cell borders — `BorderStyle.NONE`).
+The header is a **2-column borderless table** (no cell borders — `BorderStyle.NONE`). Runs on all pages after the title page.
 
 | Column | Width | Fill | Content |
 |---|---|---|---|
@@ -217,7 +296,7 @@ new Header({
               // Repeat pattern for: Doc No, Author, Rev, Date
               new Paragraph({ alignment: AlignmentType.RIGHT, children: [
                 new TextRun({ text: "Doc No: ", font: "Arial", size: 16, bold: true, color: "1F4E79" }),
-                new TextRun({ text: "CG-XXXX-001",         font: "Arial", size: 16, color: "1F4E79" }),
+                new TextRun({ text: "WI-XXXX-001",         font: "Arial", size: 16, color: "1F4E79" }),
               ]}),
               new Paragraph({ alignment: AlignmentType.RIGHT, children: [
                 new TextRun({ text: "Bryce M", font: "Arial", size: 16, bold: true, color: "1F4E79" }),
@@ -294,8 +373,8 @@ function h2(text) {
 }
 ```
 
-### Heading 3 — `h3(text)` [NEW — for CG documents]
-NAVY bold text, smaller than H2, no border. Used for sub-sections within detailed procedure steps.
+### Heading 3 — `h3(text)` (NEW for Appendix sections)
+NAVY bold text, smaller than H2, no border. Used for appendix section headers.
 
 ```javascript
 function h3(text) {
@@ -332,7 +411,7 @@ function bullet(text, bold = false) {
 ```
 
 ### Numbered Step — `step(text)`
-Uses the `"steps"` numbering reference. For concise WI documents.
+Uses the `"steps"` numbering reference. For main procedure steps.
 
 ```javascript
 function step(text) {
@@ -344,25 +423,45 @@ function step(text) {
 }
 ```
 
-### Detailed Step with Sub-steps — `stepDetailed(text)` and `subStep(text)` [NEW — for CG documents]
-Nested numbering (1, 1.a, 1.b, etc.) for comprehensive guides with click-by-click instructions.
+### Appendix Step with Sub-steps — `appendixStep(text)` and `appendixSubStep(text)` (NEW)
+Nested numbering for detailed click-by-click instructions in appendices (1, 1.a, 1.b, etc.).
 
 ```javascript
-function stepDetailed(text) {
+function appendixStep(text) {
   return new Paragraph({
-    numbering: { reference: "steps-detailed", level: 0 },
+    numbering: { reference: "appendix-steps", level: 0 },
     spacing: { before: 100, after: 60 },
     children: [new TextRun({ text, font: "Arial", size: 22, color: "000000", bold: true })]
   });
 }
 
-function subStep(text) {
+function appendixSubStep(text) {
   return new Paragraph({
-    numbering: { reference: "steps-detailed", level: 1 },
+    numbering: { reference: "appendix-steps", level: 1 },
     spacing: { before: 60, after: 60 },
     children: [new TextRun({ text, font: "Arial", size: 22, color: "000000" })]
   });
 }
+```
+
+### Hyperlinked Appendix Reference (NEW)
+Creates clickable "Appendix X.X" text that jumps to that section. Used in the Procedure checklist table.
+
+```javascript
+function appendixLink(appendixId, pageNum) {
+  return new TextRun({
+    text: `Appendix ${appendixId}`,
+    font: "Arial", size: 20, color: "0563C1", underline: {},
+    link: { type: HyperlinkType.INTERNAL, anchor: `appendix-${appendixId}` }
+  });
+}
+// Usage in a table cell:
+new Paragraph({
+  children: [
+    appendixLink("1.1", 8),
+    new TextRun({ text: ", p. 8", font: "Arial", size: 20, color: "000000" })
+  ]
+})
 ```
 
 ### Spacer — `sp(pts)`
@@ -423,6 +522,83 @@ function callout(lines, type = "note") {
 
 ---
 
+## Procedure Checklist Table (NEW) — `procedureChecklist(steps)`
+
+2-column table with step names and hyperlinked appendix references. Used in **Section 6: Procedure**.
+
+```javascript
+function procedureChecklist(steps) {
+  // steps = array of { stepName, appendixId, pageNum }
+  const colWidths = [6500, 3580];
+  const headers = ["Step", "Detailed Instructions"];
+
+  const headerRow = new TableRow({
+    children: headers.map((h, i) => new TableCell({
+      borders: { top: navyBorder, bottom: navyBorder, left: navyBorder, right: navyBorder },
+      shading: { fill: "1F4E79", type: ShadingType.CLEAR },
+      margins: { top: 80, bottom: 80, left: 120, right: 120 },
+      width: { size: colWidths[i], type: WidthType.DXA },
+      verticalAlign: VerticalAlign.CENTER,
+      children: [new Paragraph({
+        children: [new TextRun({ text: h, font: "Arial", size: 18, bold: true, color: "FFFFFF" })]
+      })]
+    }))
+  });
+
+  const dataRows = steps.map((step, ri) => new TableRow({
+    children: [
+      // Step name (left column)
+      new TableCell({
+        borders: { top: greyBorder, bottom: greyBorder, left: greyBorder, right: greyBorder },
+        shading: { fill: ri % 2 === 0 ? "FFFFFF" : "F2F2F2", type: ShadingType.CLEAR },
+        margins: { top: 60, bottom: 60, left: 120, right: 120 },
+        width: { size: colWidths[0], type: WidthType.DXA },
+        verticalAlign: VerticalAlign.CENTER,
+        children: [new Paragraph({
+          children: [new TextRun({ text: step.stepName, font: "Arial", size: 20, color: "000000" })]
+        })]
+      }),
+      // Appendix hyperlink (right column)
+      new TableCell({
+        borders: { top: greyBorder, bottom: greyBorder, left: greyBorder, right: greyBorder },
+        shading: { fill: ri % 2 === 0 ? "FFFFFF" : "F2F2F2", type: ShadingType.CLEAR },
+        margins: { top: 60, bottom: 60, left: 120, right: 120 },
+        width: { size: colWidths[1], type: WidthType.DXA },
+        verticalAlign: VerticalAlign.CENTER,
+        children: [new Paragraph({
+          alignment: AlignmentType.LEFT,
+          children: [
+            new TextRun({
+              text: `Appendix ${step.appendixId}`,
+              font: "Arial", size: 20, color: "0563C1", underline: {},
+              link: { type: HyperlinkType.INTERNAL, anchor: `appendix-${step.appendixId}` }
+            }),
+            new TextRun({ text: `, p. ${step.pageNum}`, font: "Arial", size: 20, color: "000000" })
+          ]
+        })]
+      })
+    ]
+  }));
+
+  return new Table({
+    width: { size: 10080, type: WidthType.DXA },
+    columnWidths: colWidths,
+    rows: [headerRow, ...dataRows]
+  });
+}
+```
+
+**Example usage:**
+```javascript
+procedureChecklist([
+  { stepName: "1. Verify device hash is in Intune", appendixId: "1.1", pageNum: 8 },
+  { stepName: "2. Enroll device via Autopilot", appendixId: "1.2", pageNum: 9 },
+  { stepName: "3. Assign device to employee group", appendixId: "1.3", pageNum: 10 },
+])
+```
+
+---
+
 ## Data Tables
 
 NAVY header row, alternating `FFFFFF` / `F2F2F2` rows, `CCCCCC` cell borders.
@@ -456,172 +632,6 @@ function dataTable(headers, rows, colWidths) {
 
   return new Table({
     width: { size: colWidths.reduce((a, b) => a + b, 0), type: WidthType.DXA },
-    columnWidths: colWidths,
-    rows: [headerRow, ...dataRows]
-  });
-}
-```
-
-**Example call:**
-```javascript
-dataTable(
-  ["Material", "Operation", "Notes"],
-  [
-    ["Wood (3mm)", "Engrave & Cut", "Watch for MDF resin"],
-    ["Cast Acrylic", "Engrave & Cut", "Frosted finish when engraved"],
-  ],
-  [3200, 2160, 4720]   // column widths — must sum to ≤ 10080
-)
-```
-
----
-
-## Diagnostic Tree Table [NEW — for CG documents]
-
-For troubleshooting guides: **Symptom** | **Likely Cause** | **Corrective Action**. Useful in conjunction with flowchart visuals.
-
-```javascript
-function diagnosticTable(diagnostics) {
-  // diagnostics = array of { symptom, cause, action }
-  const colWidths = [2500, 3500, 4080];
-  const headers = ["Symptom", "Likely Cause", "Corrective Action"];
-
-  const headerRow = new TableRow({
-    children: headers.map((h, i) => new TableCell({
-      borders: { top: navyBorder, bottom: navyBorder, left: navyBorder, right: navyBorder },
-      shading: { fill: "1F4E79", type: ShadingType.CLEAR },
-      margins: { top: 80, bottom: 80, left: 120, right: 120 },
-      width: { size: colWidths[i], type: WidthType.DXA },
-      verticalAlign: VerticalAlign.CENTER,
-      children: [new Paragraph({
-        children: [new TextRun({ text: h, font: "Arial", size: 18, bold: true, color: "FFFFFF" })]
-      })]
-    }))
-  });
-
-  const dataRows = diagnostics.map((diag, ri) => new TableRow({
-    children: [
-      new TableCell({
-        borders: { top: greyBorder, bottom: greyBorder, left: greyBorder, right: greyBorder },
-        shading: { fill: ri % 2 === 0 ? "FFFFFF" : "F2F2F2", type: ShadingType.CLEAR },
-        margins: { top: 60, bottom: 60, left: 120, right: 120 },
-        width: { size: colWidths[0], type: WidthType.DXA },
-        verticalAlign: VerticalAlign.TOP,
-        children: [new Paragraph({ children: [new TextRun({ text: diag.symptom, font: "Arial", size: 20 })] })]
-      }),
-      new TableCell({
-        borders: { top: greyBorder, bottom: greyBorder, left: greyBorder, right: greyBorder },
-        shading: { fill: ri % 2 === 0 ? "FFFFFF" : "F2F2F2", type: ShadingType.CLEAR },
-        margins: { top: 60, bottom: 60, left: 120, right: 120 },
-        width: { size: colWidths[1], type: WidthType.DXA },
-        verticalAlign: VerticalAlign.TOP,
-        children: [new Paragraph({ children: [new TextRun({ text: diag.cause, font: "Arial", size: 20 })] })]
-      }),
-      new TableCell({
-        borders: { top: greyBorder, bottom: greyBorder, left: greyBorder, right: greyBorder },
-        shading: { fill: ri % 2 === 0 ? "FFFFFF" : "F2F2F2", type: ShadingType.CLEAR },
-        margins: { top: 60, bottom: 60, left: 120, right: 120 },
-        width: { size: colWidths[2], type: WidthType.DXA },
-        verticalAlign: VerticalAlign.TOP,
-        children: [new Paragraph({ children: [new TextRun({ text: diag.action, font: "Arial", size: 20 })] })]
-      })
-    ]
-  }));
-
-  return new Table({
-    width: { size: 10080, type: WidthType.DXA },
-    columnWidths: colWidths,
-    rows: [headerRow, ...dataRows]
-  });
-}
-```
-
----
-
-## FAQ Section [NEW — for CG documents]
-
-Format: **Q: [Question]** (bold) followed by **A: [Answer]** (normal). Use for common questions about procedure nuances.
-
-```javascript
-function faqItem(question, answer) {
-  return [
-    new Paragraph({
-      spacing: { before: 120, after: 60 },
-      children: [new TextRun({ text: `Q: ${question}`, font: "Arial", size: 22, bold: true, color: "1F4E79" })]
-    }),
-    new Paragraph({
-      spacing: { before: 0, after: 120 },
-      children: [new TextRun({ text: `A: ${answer}`, font: "Arial", size: 22, color: "000000" })]
-    })
-  ];
-}
-```
-
-**Usage:**
-```javascript
-...faqItem(
-  "Can I skip the verification step?",
-  "No. Post-job verification confirms the procedure succeeded and is required by ISO 9001:2015 Clause 8.6. Document all results."
-),
-...faqItem(
-  "What if the device is already updated?",
-  "Check the current version in Settings > System > About. If already at target version, proceed to Post-Job Verification only."
-)
-```
-
----
-
-## Cross-References Section [NEW — for CG documents]
-
-Links to related Work Instructions (WI-) or other Comprehensive Guides (CG-). Format as a simple reference table.
-
-```javascript
-function crossReferences(docs) {
-  // docs = array of { docNo, title, relationship }
-  const colWidths = [1800, 5280, 3000];
-  const headers = ["Document No.", "Title", "Relationship"];
-
-  const headerRow = new TableRow({
-    children: headers.map((h, i) => new TableCell({
-      borders: { top: navyBorder, bottom: navyBorder, left: navyBorder, right: navyBorder },
-      shading: { fill: "1F4E79", type: ShadingType.CLEAR },
-      margins: { top: 80, bottom: 80, left: 120, right: 120 },
-      width: { size: colWidths[i], type: WidthType.DXA },
-      verticalAlign: VerticalAlign.CENTER,
-      children: [new Paragraph({
-        children: [new TextRun({ text: h, font: "Arial", size: 18, bold: true, color: "FFFFFF" })]
-      })]
-    }))
-  });
-
-  const dataRows = docs.map((doc, ri) => new TableRow({
-    children: [
-      new TableCell({
-        borders: { top: greyBorder, bottom: greyBorder, left: greyBorder, right: greyBorder },
-        shading: { fill: ri % 2 === 0 ? "FFFFFF" : "F2F2F2", type: ShadingType.CLEAR },
-        margins: { top: 60, bottom: 60, left: 120, right: 120 },
-        width: { size: colWidths[0], type: WidthType.DXA },
-        children: [new Paragraph({ children: [new TextRun({ text: doc.docNo, font: "Arial", size: 20, bold: true, color: "1F4E79" })] })]
-      }),
-      new TableCell({
-        borders: { top: greyBorder, bottom: greyBorder, left: greyBorder, right: greyBorder },
-        shading: { fill: ri % 2 === 0 ? "FFFFFF" : "F2F2F2", type: ShadingType.CLEAR },
-        margins: { top: 60, bottom: 60, left: 120, right: 120 },
-        width: { size: colWidths[1], type: WidthType.DXA },
-        children: [new Paragraph({ children: [new TextRun({ text: doc.title, font: "Arial", size: 20 })] })]
-      }),
-      new TableCell({
-        borders: { top: greyBorder, bottom: greyBorder, left: greyBorder, right: greyBorder },
-        shading: { fill: ri % 2 === 0 ? "FFFFFF" : "F2F2F2", type: ShadingType.CLEAR },
-        margins: { top: 60, bottom: 60, left: 120, right: 120 },
-        width: { size: colWidths[2], type: WidthType.DXA },
-        children: [new Paragraph({ children: [new TextRun({ text: doc.relationship, font: "Arial", size: 20 })] })]
-      })
-    ]
-  }));
-
-  return new Table({
-    width: { size: 10080, type: WidthType.DXA },
     columnWidths: colWidths,
     rows: [headerRow, ...dataRows]
   });
@@ -673,15 +683,6 @@ function signoffTable(pairs) {
   }
   return new Table({ width: { size: 10080, type: WidthType.DXA }, columnWidths: [2000, 3040, 2000, 3040], rows });
 }
-```
-
-**Example call:**
-```javascript
-signoffTable([
-  ["Document No.", "CG-XXXX-001"],  ["Revision",      "1.0"],
-  ["Category",     "Software"],     ["Effective Date", "YYYY-MM-DD"],
-  ["Author",        "Bryce M"],     ["Review Cycle",   "Annual"],
-])
 ```
 
 ---
@@ -742,8 +743,6 @@ function verificationTable(checks) {
 
 ## ISO 9001:2015 Required Sections
 
-### Work Instructions (WI-)
-
 Every SD42 work instruction **must** include the following sections in this order:
 
 | # | Section | ISO 9001 Clause | Notes |
@@ -753,31 +752,19 @@ Every SD42 work instruction **must** include the following sections in this orde
 | 3 | Referenced Documents | 7.5.3 | List all related manuals, standards, or procedures |
 | 4 | Required Tools & Materials | 7.1.3 / 7.1.4 | Table format preferred |
 | 5 | Safety & Precautions | 8.5.1 | Use `danger` callout for warnings; `note` callout for cautions |
-| 6–N | Procedure Steps | 8.5.1 | Numbered steps using `step()` function; bullets for non-sequential items |
-| N+1 | Post-Job Verification | 8.6 | Use verification table with Pass/Fail checkboxes |
-| N+2 | Troubleshooting | 8.7 | Symptom / Likely Cause / Corrective Action table |
-| N+3 | Quality Record / Sign-Off | 7.5.3 | Must be completed and retained ≥ 1 year per SD42 retention policy |
+| 6 | Procedure (Checklist) | 8.5.1 | **NEW**: 2-column table with step names + appendix references |
+| 7 | Post-Job Verification | 8.6 | Use verification table with Pass/Fail checkboxes |
+| 8 | Troubleshooting | 8.7 | Symptom / Likely Cause / Corrective Action table |
+| 9 | Quality Record / Sign-Off | 7.5.3 | Must be completed and retained ≥ 1 year per SD42 retention policy |
+| **Appendices** | Detailed Instructions | 8.5.1 (expanded) | Click-by-click steps with nested numbering (1.a, 1.b, 1.c, etc.) |
 
-### Comprehensive Guides (CG-)
+**Appendix Numbering:**
+- Appendix 1.1, 1.2, 1.3, etc. — tied to main procedure step 1
+- Appendix 2.1, 2.2, etc. — tied to main procedure step 2
+- Each appendix uses H3 heading: "Appendix 1.1: [Description]"
+- Nested numbering within appendices: 1, 1.a, 1.b, 1.c, etc.
 
-Every SD42 comprehensive guide **must** include the following sections in this order:
-
-| # | Section | ISO 9001 Clause | Notes |
-|---|---|---|---|
-| 1 | Document Control | 7.5.2 | Doc No, Revision, Author, Effective Date, Review Cycle, Classification |
-| 2 | Purpose & Scope | 8.5.1 | Describe audience (field techs, new staff), context, and learning objectives |
-| 3 | Background & Context | 8.5.1 (expanded) | Why this procedure matters; system/software overview; common scenarios |
-| 4 | Referenced Documents | 7.5.3 | List all related manuals, standards, WI-, and CG- documents |
-| 5 | Required Tools & Materials | 7.1.3 / 7.1.4 | Table format preferred |
-| 6 | Safety & Precautions | 8.5.1 | Use `danger` callout for warnings; `note` callout for cautions |
-| 7–N | Detailed Procedure Steps | 8.5.1 | Nested numbering (1., 1.a, 1.b, 1.c, etc.) with click-by-click sub-steps; screenshots encouraged |
-| N+1 | Cross-References | 7.5.3 (new) | Related WI- and CG- documents with descriptions |
-| N+2 | Frequently Asked Questions | 8.5.1 (clarification) | Common questions about procedure nuances, edge cases, optional steps |
-| N+3 | Expanded Troubleshooting | 8.7 | Diagnostic tables + decision flowcharts for complex problems |
-| N+4 | Post-Job Verification | 8.6 | Use verification table with Pass/Fail checkboxes |
-| N+5 | Quality Record / Sign-Off | 7.5.3 | Must be completed and retained ≥ 1 year per SD42 retention policy |
-
-**ISO 9001 QMS reference statement** — include in Section 2 (Purpose & Scope) for both WI and CG:
+**ISO 9001 QMS reference statement** — include in Section 2 (Purpose & Scope):
 > *This document is maintained in accordance with the SD42 Quality Management System (QMS) and aligns with ISO 9001:2015 requirements for documented work instructions (Clause 8.5.1).*
 
 **ISO 9001 records retention statement** — include in the Quality Record / Sign-Off section:
@@ -799,7 +786,7 @@ new Paragraph({
     new TextRun({ break: 1 }),
     new TextRun({ text: "Learning Today, Leading Tomorrow", font: "Arial", size: 18, italics: true, color: "595959" }),
     new TextRun({ break: 1 }),
-    new TextRun({ text: "CG-XXXX-001 Rev 1.0  —  YYYY-MM-DD  —  For internal use only", font: "Arial", size: 16, color: "AAAAAA" }),
+    new TextRun({ text: "WI-XXXX-001 Rev 1.0  —  YYYY-MM-DD  —  For internal use only", font: "Arial", size: 16, color: "AAAAAA" }),
   ]
 })
 ```
@@ -815,7 +802,7 @@ All SD42 IT Services documents follow this naming structure:
 **`[TYPE]-[CATEGORY]-[NNN]`**
 
 Where:
-- **[TYPE]** = Document type (`WI` = Work Instruction, `CG` = Comprehensive Guide)
+- **[TYPE]** = Document type (`WI` = Work Instruction, `HT` = How-To Guide)
 - **[CATEGORY]** = Technology/domain category (2-letter code)
 - **[NNN]** = Sequential document number (always 3 digits, zero-padded: 001, 002, ..., 999)
 
@@ -841,14 +828,13 @@ Where:
 | Document | Type | Category | Purpose | Example Doc No |
 |---|---|---|---|---|
 | OptiPlex device swap procedure | WI | Hardware | Quick reference for experienced techs | `WI-HW-001` |
-| OptiPlex device swap — detailed guide | CG | Hardware | Step-by-step learning guide for new techs | `CG-HW-001` |
+| OptiPlex device swap — detailed | HT | Hardware | Learning guide with appendices for newer techs | `HT-HW-001` |
 | Windows device provisioning via Intune | WI | Software | Fast provisioning steps for field techs | `WI-SW-001` |
-| Windows device provisioning — comprehensive | CG | Software | In-depth troubleshooting and context for complex deployments | `CG-SW-001` |
+| Windows device provisioning — detailed | HT | Software | In-depth guide with troubleshooting appendices | `HT-SW-001` |
 | Network drive mapping (Windows & macOS) | WI | Network | Quick how-to for both platforms | `WI-NET-001` |
 | iPad migration from Jamf to Intune | WI | Mobile | Streamlined iPad enrollment process | `WI-MOBILE-001` |
-| VPN connectivity troubleshooting | CG | Network | Diagnostic trees and common issues for remote workers | `CG-NET-001` |
 
-### When to Use WI vs. CG
+### When to Use WI vs. HT
 
 **Use Work Instruction (WI-)** when:
 - Procedure is straightforward and well-defined
@@ -856,28 +842,20 @@ Where:
 - Document should be concise (3–6 pages) and serve as quick reference
 - Minimal contextual explanation is needed
 
-**Use Comprehensive Guide (CG-)** when:
-- Procedure is complex with many decision points
-- Audience includes new technicians, trainees, or staff learning the domain
-- Document should provide deep context, background, and learning material (10–20+ pages)
-- Troubleshooting scenarios, FAQs, and cross-references are valuable
-- Nested step-by-step sub-procedures are necessary ("click-by-click" guidance)
+**Use How-To Guide (HT-)** when:
+- Procedure is complex with many decision points or variations
+- Audience includes newer technicians, trainees, or staff learning the domain
+- Document should provide detailed step-by-step instructions in appendices
+- Click-by-click guidance is valuable for users unfamiliar with the system
+- Troubleshooting scenarios and edge cases need explanation
 
 ### Versioning & Revision
 
 - **First release**: Always `Rev 1.0` (in header meta and closing block)
 - **Minor updates** (typos, clarifications, colour corrections): Increment 0.1 (e.g., 1.0 → 1.1)
-- **Major updates** (procedure changes, new sections, restructure): Increment 1.0 (e.g., 1.0 → 2.0)
+- **Major updates** (procedure changes, new appendices, restructure): Increment 1.0 (e.g., 1.0 → 2.0)
 - **Effective Date**: Format as `YYYY-MM-DD` (ISO 8601)
 - **Review Cycle**: Typically `Annual`; adjust if the procedure changes frequently
-
-### Naming Conflicts & Duplicates
-
-If you create both a WI and a CG for the same topic:
-- **Same category code is acceptable** — the TYPE prefix (`WI-` vs. `CG-`) distinguishes them
-  - Example: `WI-SW-001` (quick provisioning steps) and `CG-SW-001` (detailed provisioning guide)
-- **Different sequential numbers are required** if you have multiple related documents in the same category
-  - Example: `WI-HW-001`, `WI-HW-002`, `WI-HW-003` for different hardware procedures
 
 ### Document Numbering Authority
 
@@ -897,100 +875,98 @@ When asking an AI assistant to generate a new SD42 Work Instruction, use this pr
 You are generating a School District No. 42 (SD42) Work Instruction (WI-) as a .docx file
 using the Node.js `docx` npm library.
 
-Follow the SD42_DOCX_Style_Template.md specification for Work Instructions EXACTLY:
+Follow the SD42_DOCX_Style_Template.md v2.0 specification for Work Instructions EXACTLY:
+- Hybrid structure: Title page + quick checklist procedure + brief sections (no appendices)
 - Page size: Letter (12240 × 15840 DXA), margins 1080 DXA all sides
 - Colours: NAVY=1F4E79, NAVY_LIGHT=D6E4F0, NAVY_MID=BDD7EE, GREY_ROW=F2F2F2
 - Font: Arial throughout; body 22pt, H1 26pt, H2 22pt
+- Title page: Separate cover with Doc No, Title, Author, Date, Scope + instruction to start at Procedure
 - Header: 2-column borderless table — left NAVY (logo + title), right D6E4F0 (meta)
 - Footer: NAVY top border, left org name, right tab page number
-- H1: white on NAVY background
-- H2: NAVY bold text, NAVY underline
-- Callouts: left-border blocks — red (C00000/FDECEA) for WARNING, yellow (BF8F00/FFF2CC) for NOTE
-- Procedure steps: numbered using step() function; bullets for non-sequential items
+- Procedure (Section 6): Simple numbered steps (1, 2, 3) — NOT the checklist table format
 - Include all ISO 9001:2015 required sections for WI (Document Control, Purpose & Scope, Referenced Documents,
   Tools & Materials, Safety, Procedure, Verification, Troubleshooting, Quality Record/Sign-Off)
 - End with the SD42 closing brand block
+- NO appendices (this is a quick-reference document)
 
 The document to create is: [DESCRIBE YOUR WI DOCUMENT HERE]
 Document number: [WI-CATEGORY-NNN]
 Author: [NAME]
 ```
 
-### For Comprehensive Guides (CG-)
+### For How-To Guides (HT-)
 
-When asking an AI assistant to generate a new SD42 Comprehensive Guide, use this prompt:
+When asking an AI assistant to generate a new SD42 How-To Guide, use this prompt:
 
 ```
-You are generating a School District No. 42 (SD42) Comprehensive Guide (CG-) as a .docx file
+You are generating a School District No. 42 (SD42) How-To Guide (HT-) as a .docx file
 using the Node.js `docx` npm library.
 
-Follow the SD42_DOCX_Style_Template.md specification for Comprehensive Guides EXACTLY:
+Follow the SD42_DOCX_Style_Template.md v2.0 specification for How-To Guides EXACTLY:
+- Hybrid structure: Title page + checklist procedure (with appendix references) + detailed appendices
 - Page size: Letter (12240 × 15840 DXA), margins 1080 DXA all sides
 - Colours: NAVY=1F4E79, NAVY_LIGHT=D6E4F0, NAVY_MID=BDD7EE, GREY_ROW=F2F2F2
 - Font: Arial throughout; body 22pt, H1 26pt, H2 22pt, H3 20pt
+- Title page: Separate cover with Doc No, Title, Author, Date, Scope + instruction to start at Procedure
 - Header: 2-column borderless table — left NAVY (logo + title), right D6E4F0 (meta)
 - Footer: NAVY top border, left org name, right tab page number
-- H1: white on NAVY background
-- H2: NAVY bold text, NAVY underline
-- H3: NAVY bold text (no underline) — used for sub-sections in detailed steps
-- Callouts: left-border blocks — red (C00000/FDECEA) for WARNING, yellow (BF8F00/FFF2CC) for NOTE
-- Procedure steps: NESTED numbering using stepDetailed() for main steps and subStep() for click-by-click
-  Format: 1. [Main step], 1.a [Sub-step], 1.b [Sub-step], etc.
-- Include ALL ISO 9001:2015 required sections for CG (Document Control, Purpose & Scope, Background & Context,
-  Referenced Documents, Tools & Materials, Safety, Detailed Procedure with nested steps, Cross-References,
-  FAQs, Expanded Troubleshooting, Verification, Quality Record/Sign-Off)
-- Use faqItem() for frequently asked questions
-- Use diagnosticTable() for expanded troubleshooting with symptom/cause/action
-- Use crossReferences() to link related WI- and CG- documents
+- Procedure (Section 6): 2-column CHECKLIST TABLE format using procedureChecklist() function
+  - Left column: "1. Step name", "2. Step name", etc.
+  - Right column: Hyperlinked "Appendix 1.1, p. X", "Appendix 1.2, p. Y", etc.
+  - Each step hyperlinks to its appendix section with internal anchor
+- Appendices (after Sign-Off): Detailed click-by-click instructions
+  - H3 headers: "Appendix 1.1: [Description]"
+  - Nested numbering using appendixStep() and appendixSubStep()
+  - Format: 1, 1.a, 1.b, 1.c, 2, 2.a, 2.b, etc.
+- Include all ISO 9001:2015 required sections for HT (Document Control, Purpose & Scope, Referenced Documents,
+  Tools & Materials, Safety, Procedure Checklist, Verification, Troubleshooting, Quality Record/Sign-Off)
 - End with the SD42 closing brand block
 
-The document to create is: [DESCRIBE YOUR CG DOCUMENT HERE — note target audience is field techs needing detailed context]
-Document number: [CG-CATEGORY-NNN]
+The document to create is: [DESCRIBE YOUR HT DOCUMENT HERE]
+Document number: [HT-CATEGORY-NNN]
 Author: [NAME]
-Audience: Field technicians, new staff, or anyone needing detailed step-by-step guidance
+Audience: [Field technicians / new staff / etc.]
 ```
 
 ---
 
 ## Quick Reference — Element Summary
 
-| Element | Function | Returns | WI | CG |
+| Element | Function | Returns | WI | HT |
 |---|---|---|---|---|
+| `titlePage(docNo, title, author, date, scope)` | Cover sheet with instructions | `Paragraph[]` | ✓ | ✓ |
 | `h1(text)` | Section heading (NAVY bg, white text) | `Paragraph` | ✓ | ✓ |
 | `h2(text)` | Sub-section heading (NAVY text, underline) | `Paragraph` | ✓ | ✓ |
-| `h3(text)` | Sub-sub-section heading (NAVY text) | `Paragraph` | — | ✓ |
+| `h3(text)` | Appendix section heading (NAVY text) | `Paragraph` | — | ✓ |
 | `body(text, opts)` | Body paragraph | `Paragraph` | ✓ | ✓ |
 | `bullet(text)` | Bullet list item | `Paragraph` | ✓ | ✓ |
 | `step(text)` | Numbered procedure step | `Paragraph` | ✓ | — |
-| `stepDetailed(text)` | Main step (nested numbering) | `Paragraph` | — | ✓ |
-| `subStep(text)` | Sub-step (nested numbering 1.a, 1.b) | `Paragraph` | — | ✓ |
+| `appendixStep(text)` | Main appendix step | `Paragraph` | — | ✓ |
+| `appendixSubStep(text)` | Sub-step in appendix (1.a, 1.b) | `Paragraph` | — | ✓ |
 | `sp(pts)` | Vertical spacer | `Paragraph` | ✓ | ✓ |
 | `pb()` | Page break | `Paragraph` | ✓ | ✓ |
 | `...callout(lines, "danger")` | Red WARNING block | `Paragraph[]` | ✓ | ✓ |
 | `...callout(lines, "note")` | Yellow NOTE block | `Paragraph[]` | ✓ | ✓ |
+| `procedureChecklist(steps)` | Checklist table with appendix links | `Table` | — | ✓ |
 | `dataTable(headers, rows, colWidths)` | Data/reference table | `Table` | ✓ | ✓ |
-| `diagnosticTable(diags)` | Symptom/Cause/Action troubleshooting | `Table` | — | ✓ |
-| `...faqItem(q, a)` | FAQ question & answer pair | `Paragraph[]` | — | ✓ |
-| `crossReferences(docs)` | Related document references | `Table` | — | ✓ |
 | `signoffTable(pairs)` | Document control / sign-off | `Table` | ✓ | ✓ |
 | `verificationTable(checks)` | Pass/Fail checklist | `Table` | ✓ | ✓ |
 
 ---
 
-## Key Differences: WI- vs. CG-
+## Key Differences: WI- vs. HT-
 
-| Aspect | WI (Work Instruction) | CG (Comprehensive Guide) |
+| Aspect | WI (Work Instruction) | HT (How-To Guide) |
 |---|---|---|
-| **Audience** | Experienced technicians; quick reference | Field techs; learners needing context |
-| **Length** | Concise; typically 3–6 pages | Detailed; typically 10–20+ pages |
-| **Step format** | Simple numbered steps (1, 2, 3, ...) | Nested numbered steps (1, 1.a, 1.b, 1.c, ...) |
-| **Sections** | Essential 9 sections | Essential 11 sections (includes Background, FAQs, Cross-Refs) |
-| **Troubleshooting** | Basic Symptom/Cause/Action table | Expanded diagnostic table + decision flowcharts |
-| **Context** | Minimal; assumes prior knowledge | Substantial; explains the 'why' |
-| **FAQs** | None | Dedicated section for common questions |
-| **Cross-refs** | Inline mentions | Dedicated Cross-References table |
-| **Use case** | "How do I...?" reference | "Help me understand and do..." learning guide |
+| **Audience** | Experienced technicians; quick reference | Newer/learning techs; detailed guidance |
+| **Length** | Concise; 3–6 pages | Detailed; 8–15+ pages |
+| **Procedure Format** | Simple numbered steps (1, 2, 3) | 2-column checklist table + appendix links |
+| **Detail Level** | Minimal; assumes prior knowledge | Extensive; click-by-click in appendices |
+| **Appendices** | None | Multiple (1.1, 1.2, 1.3, etc.) with nested steps |
+| **Use Case** | "How do I do this quickly?" | "Help me understand and do this step-by-step" |
+| **Title Page** | Yes, basic | Yes, basic |
+| **Target User** | Experienced field techs | New hires, trainees, learning techs |
 
 ---
 
-*SD42 IT Services — Internal use only. Template version 2.0 (Updated with CG- support)*
+*SD42 IT Services — Internal use only. Template version 2.0 (Restructured with title page, hybrid checklist + appendix format)*
