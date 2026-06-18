@@ -1,5 +1,7 @@
-# SD42 Work Instruction — DOCX Style Template (v2.0)
+# SD42 Work Instruction — DOCX Style Template (v2.1)
 ### Hybrid Checklist + Appendix Format for use with GitHub Copilot, Microsoft 365 Copilot, or any AI code assistant
+
+> **What's new in v2.1 (backward compatible):** Adds a documented *hand-holding* detail level for How-To Guides — a third numbering level (1 → a → i), an `appendixSubSubStep()` helper, a monospace `code()` helper for exact commands, an optional **Appendix A: Before You Begin — Computer & Console Basics** primer, a new **Writing Click-by-Click Appendices** guidance section, and an updated HT- AI prompt. All v2.0 documents remain valid; the new pieces are additive.
 
 ---
 
@@ -159,12 +161,18 @@ numbering: {
         {
           level: 1, format: LevelFormat.LOWER_LETTER, text: "%2.", alignment: AlignmentType.LEFT,
           style: { paragraph: { indent: { left: 1080, hanging: 270 } } }
+        },
+        {
+          level: 2, format: LevelFormat.LOWER_ROMAN, text: "%3.", alignment: AlignmentType.LEFT,
+          style: { paragraph: { indent: { left: 1620, hanging: 300 } } }
         }
       ]
     }
   ]
 }
 ```
+
+> **Hand-holding tip:** For deeply detailed click-by-click guides, give **each appendix its own numbering reference** (e.g. `appendix-1`, `appendix-2`, …) using the same three-level definition above. Re-using one shared reference makes the numbers run continuously across every appendix; a per-appendix reference restarts each appendix cleanly at `1`.
 
 ---
 
@@ -440,6 +448,33 @@ function appendixSubStep(text) {
     numbering: { reference: "appendix-steps", level: 1 },
     spacing: { before: 60, after: 60 },
     children: [new TextRun({ text, font: "Arial", size: 22, color: "000000" })]
+  });
+}
+```
+
+### Appendix Sub-Sub-Step — `appendixSubSubStep(text)` (NEW in v2.1)
+Third-level nesting (1, a, **i**) for the most granular hand-holding instructions inside an appendix sub-step. Use sparingly — only when a single sub-step genuinely needs to be broken into smaller actions.
+
+```javascript
+function appendixSubSubStep(text) {
+  return new Paragraph({
+    numbering: { reference: "appendix-steps", level: 2 },
+    spacing: { before: 40, after: 40 },
+    children: [new TextRun({ text, font: "Arial", size: 22, color: "000000" })]
+  });
+}
+```
+
+### Command / Code Line — `code(text)` (NEW in v2.1)
+A monospace, grey-shaded line for exact commands or values the reader must type (e.g. PowerShell, file paths). Keep each command on its own `code()` line. Insert it as a normal child between numbered steps — list numbering continues across it automatically.
+
+```javascript
+function code(text) {
+  return new Paragraph({
+    spacing: { before: 60, after: 60 },
+    indent: { left: 540 },
+    shading: { fill: "F2F2F2", type: ShadingType.CLEAR },
+    children: [new TextRun({ text, font: "Consolas", size: 20, color: "1A1A1A" })]
   });
 }
 ```
@@ -865,6 +900,55 @@ Where:
 
 ---
 
+## Writing Click-by-Click Appendices (Hand-Holding Detail Level) — NEW in v2.1
+
+HT- guides may be written at a **hand-holding detail level** for readers who are new to the task — assume the reader has minimal prior experience and spell everything out. This level is what turns a short HT- into a thorough 12–16+ page training document. WI- guides do **not** use this level (they stay concise for experienced techs).
+
+### Core writing principles
+
+1. **One action per step.** Break compound instructions into atomic steps. "Go to Devices > All devices, search, and delete" becomes four separate steps: click Devices → click All devices → search → click Delete.
+2. **Lead with a bold action verb.** Click, Type, Right-click, Select, Press, Wait. The reader should always know the physical thing to do.
+3. **Spell out the breadcrumb.** Don't write a path as `Devices > Enrollment > Windows`. Walk it: "In the left pane click **Devices**, then click **Enrollment**, then click **Windows**."
+4. **Define every term inline, the first time it appears.** "Open an *elevated* PowerShell window (elevated means Run as administrator)." "OOBE means Out-Of-Box Experience — the blue setup screens on a fresh install."
+5. **Describe what the reader will see.** Confirm the result of an action so they know it worked: "A dark-blue window with white text opens." "A confirmation box appears — click **Yes**." "Nothing visible happens — that is expected."
+6. **Name where things are on screen.** "the bottom-left corner," "near the clock (bottom-right)," "the row of buttons across the top (the toolbar)."
+7. **Call out forks and dead-ends.** Use sub-steps for "If YES … / If NO …" and explain what to do when a button is greyed out or a record isn't found.
+8. **Put exact commands in `code()` lines**, one command per line, and tell the reader to press **Enter** after each and how to answer any prompt (e.g. "type `Y` and press Enter").
+9. **Nest at most three levels.** Use `appendixStep` (1), `appendixSubStep` (a), and `appendixSubSubStep` (i). If you need a fourth level, the step is too big — split it.
+
+### Terse vs. hand-holding (same instruction)
+
+**Terse (WI- style):**
+> Delete the device from Intune (Devices > All devices > select > Delete).
+
+**Hand-holding (HT- style):**
+> 3. **Delete the device from Intune.**
+>    - a. In Microsoft Edge, go to `https://intune.microsoft.com` and sign in if asked.
+>    - b. In the left pane, click **Devices**, then click **All devices**.
+>    - c. Search for the device, then click its name to open it.
+>    - d. Along the top of the page is a row of buttons (the toolbar). Click **Delete**.
+>    - e. A warning box appears asking you to confirm. Click **Yes**.
+
+### Appendix A: Before You Begin — Computer & Console Basics (recommended primer)
+
+For hand-holding guides, add a primer as the **first appendix (Appendix A)**, before Appendix 1.1. It explains the fundamentals *once* so the numbered appendices don't have to repeat them. Render its heading with `h3anchor("Appendix A: Before You Begin — Computer & Console Basics", "ax_A")` and group the content under bold `body(text, { bold: true })` mini-headers with `appendixStep` / `appendixSubStep` lists. Recommended coverage:
+
+- **How to read the steps** — numbered steps are done in order; letters (a, b) and roman numerals (i, ii) are nested actions; the `>` in a path means "then click."
+- **Using the mouse** — click (left button once), right-click (right button, opens a menu), select (click to highlight).
+- **Using the keyboard** — type, press Enter, key combos like `Shift + F10` (hold first key, tap second), the Windows key.
+- **Opening programs** — the Start menu, type-to-search, and "Run as administrator" / elevated (right-click → Run as administrator → click Yes).
+- **Browser & portals** — what a browser and the address bar are; the two admin portals and their URLs; signing in and approving MFA; the meaning of "left pane" and "toolbar."
+
+Mark the primer as skippable for experienced staff: open it with an italic `body(...)` line such as *"If you are comfortable with Windows and the Microsoft admin portals, skip to Appendix 1.1."*
+
+### Length & numbering expectations at this level
+
+- Expect each procedure step's appendix to expand to roughly 6–15 numbered actions with sub-steps.
+- The procedure checklist step names (Section 6) should be **full descriptive sentences** at this level — state what the step does and which systems are touched — not bare labels.
+- Re-detect appendix page numbers after building (content shifts pages), then update the `, p. X` references in the checklist so they stay accurate.
+
+---
+
 ## AI Prompt — How to Use This Template
 
 ### For Work Instructions (WI-)
@@ -916,8 +1000,19 @@ Follow the SD42_DOCX_Style_Template.md v2.0 specification for How-To Guides EXAC
   - Each step hyperlinks to its appendix section with internal anchor
 - Appendices (after Sign-Off): Detailed click-by-click instructions
   - H3 headers: "Appendix 1.1: [Description]"
-  - Nested numbering using appendixStep() and appendixSubStep()
+  - Nested numbering using appendixStep(), appendixSubStep(), and appendixSubSubStep() (1, a, i)
   - Format: 1, 1.a, 1.b, 1.c, 2, 2.a, 2.b, etc.
+- HAND-HOLDING DETAIL LEVEL (assume the reader has minimal experience — spell everything out):
+  - One action per step; lead each step with a bold action verb (Click, Type, Right-click, Select, Press, Wait)
+  - Walk every breadcrumb click-by-click instead of writing it as a "A > B > C" path
+  - Define each term inline the first time (e.g. "elevated = Run as administrator"; "OOBE = the blue setup screens")
+  - Describe what the reader will see after each action (dialog boxes, windows, "nothing happens — that is expected")
+  - Put exact commands in code() lines, one per line, and say to press Enter and how to answer prompts
+  - Nest at most three levels (appendixStep / appendixSubStep / appendixSubSubStep)
+  - Add an Appendix A: "Before You Begin — Computer & Console Basics" primer before Appendix 1.1 (mouse, keyboard, Start menu, Run as administrator, browser/address bar, portals, sign-in/MFA, left pane vs. toolbar); mark it skippable for experienced staff
+  - Make the Section 6 checklist step names full descriptive sentences, not bare labels
+  - Use the code() helper (Consolas, grey shading) for all commands and exact values
+  - After building, re-detect appendix page numbers and update the ", p. X" references in the checklist
 - Include all ISO 9001:2015 required sections for HT (Document Control, Purpose & Scope, Referenced Documents,
   Tools & Materials, Safety, Procedure Checklist, Verification, Troubleshooting, Quality Record/Sign-Off)
 - End with the SD42 closing brand block
@@ -926,6 +1021,7 @@ The document to create is: [DESCRIBE YOUR HT DOCUMENT HERE]
 Document number: [HT-CATEGORY-NNN]
 Author: [NAME]
 Audience: [Field technicians / new staff / etc.]
+Detail level: [Standard | Hand-holding (assume no prior experience)]
 ```
 
 ---
@@ -943,6 +1039,8 @@ Audience: [Field technicians / new staff / etc.]
 | `step(text)` | Numbered procedure step | `Paragraph` | ✓ | — |
 | `appendixStep(text)` | Main appendix step | `Paragraph` | — | ✓ |
 | `appendixSubStep(text)` | Sub-step in appendix (1.a, 1.b) | `Paragraph` | — | ✓ |
+| `appendixSubSubStep(text)` | Sub-sub-step in appendix (1.a.i) — NEW v2.1 | `Paragraph` | — | ✓ |
+| `code(text)` | Monospace command / value line — NEW v2.1 | `Paragraph` | ✓ | ✓ |
 | `sp(pts)` | Vertical spacer | `Paragraph` | ✓ | ✓ |
 | `pb()` | Page break | `Paragraph` | ✓ | ✓ |
 | `...callout(lines, "danger")` | Red WARNING block | `Paragraph[]` | ✓ | ✓ |
@@ -961,7 +1059,7 @@ Audience: [Field technicians / new staff / etc.]
 | **Audience** | Experienced technicians; quick reference | Newer/learning techs; detailed guidance |
 | **Length** | Concise; 3–6 pages | Detailed; 8–15+ pages |
 | **Procedure Format** | Simple numbered steps (1, 2, 3) | 2-column checklist table + appendix links |
-| **Detail Level** | Minimal; assumes prior knowledge | Extensive; click-by-click in appendices |
+| **Detail Level** | Minimal; assumes prior knowledge | Extensive; click-by-click in appendices (optionally hand-holding — assume no prior experience, see v2.1 guidance) |
 | **Appendices** | None | Multiple (1.1, 1.2, 1.3, etc.) with nested steps |
 | **Use Case** | "How do I do this quickly?" | "Help me understand and do this step-by-step" |
 | **Title Page** | Yes, basic | Yes, basic |
@@ -969,4 +1067,4 @@ Audience: [Field technicians / new staff / etc.]
 
 ---
 
-*SD42 IT Services — Internal use only. Template version 2.0 (Restructured with title page, hybrid checklist + appendix format)*
+*SD42 IT Services — Internal use only. Template version 2.1 (Adds hand-holding click-by-click detail level: third numbering level, appendixSubSubStep() and code() helpers, Appendix A basics primer, and click-by-click authoring guidance. Builds on v2.0 hybrid checklist + appendix format.)*
